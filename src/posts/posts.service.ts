@@ -34,10 +34,12 @@ export class PostsService {
 
   async remove(id: number) {
     await this.findRegisterOrNotFound(id);
-    const postAlreadyPublished = this.publicationsService.findOne(id);
+    const postAlreadyPublished = await this.publicationsService.findAll();
 
-    if (postAlreadyPublished) {
-      throw new ForbiddenException("This post is already published, you can remove");
+    const publishedOrScheduled = postAlreadyPublished.find(i => i.postId === id);
+
+    if (publishedOrScheduled) {
+      throw new ForbiddenException("This post is already published, you can't remove");
     }
     return this.postsRepository.removePost(id);
   }
@@ -45,7 +47,7 @@ export class PostsService {
   private async findRegisterOrNotFound(id: number) {
     const postById = await this.postsRepository.getPostById(id);
 
-    if (postById) {
+    if (!postById) {
       throw new NotFoundException("Post not found");
     }
 
