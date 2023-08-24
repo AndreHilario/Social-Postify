@@ -18,11 +18,11 @@ export class PublicationsService {
 
   async create(createPublicationDto: CreatePublicationDto) {
     await this.findMediaAndPostRegister(createPublicationDto.mediaId, createPublicationDto.postId);
-    const newPublication = new Publication(createPublicationDto.mediaId, createPublicationDto.postId, createPublicationDto.date);
+    const newPublication = new Publication(createPublicationDto.mediaId, createPublicationDto.postId, new Date(createPublicationDto.date));
     return this.publicationsRepository.createPublication(newPublication);
   }
 
-  async findAll(published: boolean, after: string) {
+  async findAll(published?: boolean, after?: string) {
     const publications = await this.publicationsRepository.getAllPublications();
 
     if (!published && !after) {

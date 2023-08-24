@@ -42,11 +42,13 @@ export class MediasService {
   }
 
   async remove(id: number) {
-    await this.mediasRepository.getMediaById(id);
-    const mediaAlreadyPublished = this.publicationsService.findOne(id);
+    await this.registerNotFound(id);
+    const mediaAlreadyPublished = await this.publicationsService.findAll();
 
-    if (mediaAlreadyPublished) {
-      throw new ForbiddenException("This media is already published, you can remove");
+    const publishedOrScheduled = mediaAlreadyPublished.find(i => i.mediaId === id);
+  
+    if (publishedOrScheduled) {
+      throw new ForbiddenException("This media is already published, you can't remove");
     }
 
     return this.mediasRepository.removeMedia(id);
@@ -71,7 +73,7 @@ export class MediasService {
     );
 
     if (duplicateMedia) {
-      throw new ConflictException("You already have a equal media");
+      throw new ConflictException("You already have the same media");
     }
 
     return duplicateMedia;
