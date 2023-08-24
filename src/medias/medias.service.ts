@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 import { Media } from './entities/media.entity';
 import { MediasRepository } from './medias.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class MediasService {
-  constructor(private readonly mediasRepository: MediasRepository) { }
+  constructor(
+    private readonly mediasRepository: MediasRepository,
+    private readonly publicationsService: PublicationsService
+  ) { }
 
   async create(createMediaDto: CreateMediaDto) {
     await this.findDuplicateMedia(createMediaDto.title, createMediaDto.username);
@@ -37,9 +41,12 @@ export class MediasService {
   }
 
   async remove(id: number) {
-    const mediaById = await this.mediasRepository.getMediaById(id);
-    //A media só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). 
-    //Neste caso, retornar o status code 403 Forbidden => Procurar a media em publications (import e export) e trazer o erro caso exista
+    await this.mediasRepository.getMediaById(id);
+    const mediaAlreadyPublished = this.publicationsService.findOne(id);
+
+    if (mediaAlreadyPublished) {
+      throw new ForbiddenException("This media is already published, you can remove");
+    }
 
     return this.mediasRepository.removeMedia(id);
   }
@@ -48,7 +55,7 @@ export class MediasService {
     const mediaById = await this.mediasRepository.getMediaById(id);
 
     if (!mediaById) {
-      //dar um error 404 Not Found
+      throw new NotFoundException("Media not found");
     }
 
     return mediaById;
@@ -63,7 +70,7 @@ export class MediasService {
     );
 
     if (duplicateMedia) {
-      //Erro 409 - Conflict
+      throw new ConflictException("You already have a equal media");
     }
 
     return duplicateMedia;
