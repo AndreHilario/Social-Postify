@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
 import { PostsRepository } from './posts.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly postsRepository: PostsRepository) { }
+  constructor(
+    private readonly postsRepository: PostsRepository,
+    private readonly publicationsService: PublicationsService
+  ) { }
 
   create(createPostDto: CreatePostDto) {
     const newPost = new Post(createPostDto.title, createPostDto.text, createPostDto.image);
@@ -29,8 +33,11 @@ export class PostsService {
 
   async remove(id: number) {
     await this.findRegisterOrNotFound(id);
-    //A media só pode ser deletada se não estiver fazendo parte de nenhuma publicação (agendada ou publicada). 
-    //Neste caso, retornar o status code 403 Forbidden => Procurar a media em publications (import e export) e trazer o erro caso exista
+    const postAlreadyPublished = this.publicationsService.findOne(id);
+
+    if (postAlreadyPublished) {
+      throw new ForbiddenException("This post is already published, you can remove");
+    }
     return this.postsRepository.removePost(id);
   }
 
@@ -38,7 +45,7 @@ export class PostsService {
     const postById = await this.postsRepository.getPostById(id);
 
     if (postById) {
-      // retorna o erro 404 
+      throw new NotFoundException("Post not found");
     }
 
     return postById;

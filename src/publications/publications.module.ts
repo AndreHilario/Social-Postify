@@ -9,6 +9,7 @@ import { PostsModule } from 'src/posts/posts.module';
 @Module({
   controllers: [PublicationsController],
   providers: [PublicationsService, PublicationsRepository],
-  imports: [PrismaModule, MediasModule, PostsModule]
+  imports: [PrismaModule, MediasModule, PostsModule],
+  exports: [PublicationsService]
 })
 export class PublicationsModule {}
