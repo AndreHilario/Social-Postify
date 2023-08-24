@@ -1,4 +1,4 @@
-import { IsISO8601, IsInt, IsNotEmpty } from "class-validator"
+import { IsISO8601, IsInt, IsNotEmpty } from "class-validator";
 
 export class CreatePublicationDto {
     @IsInt()

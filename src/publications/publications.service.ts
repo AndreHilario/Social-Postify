@@ -1,10 +1,11 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 import { PublicationsRepository } from './publications.repository';
 import { MediasService } from '../medias/medias.service';
 import { PostsService } from '../posts/posts.service';
 import { Publication } from './entities/publication.entity';
+import { isBooleanString, isISO8601 } from 'class-validator';
 
 @Injectable()
 export class PublicationsService {
@@ -22,28 +23,42 @@ export class PublicationsService {
     return this.publicationsRepository.createPublication(newPublication);
   }
 
-  async findAll(published?: boolean, after?: string) {
+  async findAll(published?: string, after?: string) {
     const publications = await this.publicationsRepository.getAllPublications();
 
     if (!published && !after) {
       return publications;
     }
 
-    if (published === false && !after) {
+    if (published && !isBooleanString(published)) {
+      throw new HttpException(
+        `Invalid value for query parameter 'published'. It should be a boolean.`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    if (after && !isISO8601(after)) {
+      throw new HttpException(
+        `Invalid value for query parameter 'after'. It should be a valid date in ISO 8601 format.`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    if (published === "false" && !after) {
       const notPublishedYet = publications.filter(p => p.date > new Date());
       return notPublishedYet;
-    } else if (published === true) {
+    } else if (published === "true") {
       if (!after) {
         const alreadyPublished = publications.filter(p => p.date < new Date());
         return alreadyPublished;
       } else {
-        const alreadyPublishedAfter = publications.filter(p => p.date < new Date(after));
+        const alreadyPublishedAfter = publications.filter(p => p.date > new Date(after) && p.date < new Date());
         return alreadyPublishedAfter;
       }
     }
 
     if (!published && after) {
-      const publishedAfter = publications.filter(p => p.date < new Date(after));
+      const publishedAfter = publications.filter(p => p.date > new Date(after) && p.date < new Date());
       return publishedAfter;
     }
 
@@ -72,16 +87,8 @@ export class PublicationsService {
   }
 
   private async findMediaAndPostRegister(mediaId: number, postId: number) {
-    const media = await this.mediasService.findOne(mediaId);
-    const post = await this.postsService.findOne(postId);
-
-    if (!media) {
-      throw new NotFoundException("Media not found");
-    }
-
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
+    await this.mediasService.findOne(mediaId);
+    await this.postsService.findOne(postId);
   }
 
   private async findRegisterOrNotFoundError(id: number) {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe, Query, Put } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
@@ -13,7 +13,7 @@ export class PublicationsController {
   }
 
   @Get()
-  findAll(@Query('published') published: boolean, @Query('after') after: string) {
+  findAll(@Query('published') published: string, @Query('after') after: string) {
     return this.publicationsService.findAll(published, after);
   }
 
@@ -22,7 +22,7 @@ export class PublicationsController {
     return this.publicationsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() updatePublicationDto: UpdatePublicationDto) {
     return this.publicationsService.update(id, updatePublicationDto);
   }
