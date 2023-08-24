@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query, ParseBoolPipe } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
 import { UpdatePublicationDto } from './dto/update-publication.dto';
 
 @Controller('publications')
 export class PublicationsController {
-  constructor(private readonly publicationsService: PublicationsService) {}
+  constructor(private readonly publicationsService: PublicationsService) { }
 
   @Post()
   create(@Body() createPublicationDto: CreatePublicationDto) {
@@ -13,22 +13,22 @@ export class PublicationsController {
   }
 
   @Get()
-  findAll() {
-    return this.publicationsService.findAll();
+  findAll(@Query('published', ParseBoolPipe) published: boolean, @Query('after') after: string) {
+    return this.publicationsService.findAll(published, after);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.publicationsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.publicationsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePublicationDto: UpdatePublicationDto) {
-    return this.publicationsService.update(+id, updatePublicationDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updatePublicationDto: UpdatePublicationDto) {
+    return this.publicationsService.update(id, updatePublicationDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.publicationsService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.publicationsService.remove(id);
   }
 }
