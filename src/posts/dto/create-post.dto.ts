@@ -1,12 +1,20 @@
 import { IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator"
 
 export class CreatePostDto {
-    @IsString()
-    @IsNotEmpty()
+    @IsString({
+        message: "All fields are required or use the correct format"
+    })
+    @IsNotEmpty({
+        message: "All fields are required or use the correct format"
+    })
     title: string
 
-    @IsString()
-    @IsNotEmpty()
+    @IsString({
+        message: "All fields are required or use the correct format"
+    })
+    @IsNotEmpty({
+        message: "All fields are required or use the correct format"
+    })
     text: string
 
     @IsNotEmpty()
