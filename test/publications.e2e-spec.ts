@@ -104,7 +104,7 @@ describe('Publication e2e Tests', () => {
         const media = await mediasFactory.createMedia(prisma);
 
         const scheduledPublication = await publicationsFactory.createPublication(prisma, media.id, post.id);
-        scheduledPublication.date = new Date(Date.now() + 3600000);
+        scheduledPublication.date = new Date(Date.now() - 3600000);
 
         const updatedData = {
             mediaId: media.id,
@@ -117,6 +117,24 @@ describe('Publication e2e Tests', () => {
             .send(updatedData);
 
         expect(response.statusCode).toBe(HttpStatus.FORBIDDEN);
+    });
+
+    it('PUT /publications/:id => should return 200 and update a scheduled publication', async () => {
+        const post = await postsFactory.createPost(prisma);
+        const media = await mediasFactory.createMedia(prisma);
+
+        const scheduledPublication = await publicationsFactory.createPublication(prisma, media.id, post.id);
+        scheduledPublication.date = new Date(Date.now() + 720000);
+        const updatedData = await publicationsFactory.updatePublication(prisma, scheduledPublication.id, media.id, post.id);
+
+        const response = await request(app.getHttpServer())
+            .put(`/publications/${scheduledPublication.id}`)
+            .send(updatedData);
+
+        expect(response.statusCode).toBe(HttpStatus.OK);
+        expect(response.body.mediaId).toBe(updatedData.mediaId);
+        expect(response.body.postId).toBe(updatedData.postId);
+        expect(new Date(response.body.date)).toEqual(new Date(updatedData.date));
     });
 
 

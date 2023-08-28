@@ -77,8 +77,8 @@ export class PublicationsService {
     if (publication.date < new Date()) {
       throw new ForbiddenException("Publication already published");
     }
-
-    return this.publicationsRepository.updatePublication(id, updatePublicationDto);
+    const updatedPublication = new Publication(updatePublicationDto.mediaId, updatePublicationDto.postId, new Date(updatePublicationDto.date));
+    return this.publicationsRepository.updatePublication(id, updatedPublication);
   }
 
   async remove(id: number) {

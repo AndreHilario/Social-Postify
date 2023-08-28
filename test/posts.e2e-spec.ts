@@ -6,14 +6,17 @@ import { PrismaService } from "./../src/prisma/prisma.service";
 import * as request from "supertest";
 import postsFactory from "./factories/posts/posts-factory";
 
-describe('PostsController', () => {
+describe('Post e2e Tests', () => {
     let app: INestApplication;
-    let prisma: PrismaService;
+    let prisma: PrismaService = new PrismaService();
 
     beforeEach(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule, PrismaModule],
-        }).compile();
+        })
+            .overrideProvider(PrismaService)
+            .useValue(prisma)
+            .compile();
 
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(new ValidationPipe());
@@ -24,7 +27,7 @@ describe('PostsController', () => {
 
         await app.init();
     });
-
+    
     it('POST /posts => should create a new post and return 201 created', async () => {
         const post = await postsFactory.createPost(prisma);
 
