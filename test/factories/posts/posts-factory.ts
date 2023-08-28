@@ -2,7 +2,7 @@ import { PrismaService } from "./../../../src/prisma/prisma.service";
 import { FactoryPost } from "./posts-factory.entity";
 import * as faker from 'faker';
 
-export async function createPost(prisma: PrismaService) {
+async function createPost(prisma: PrismaService) {
     const post = new FactoryPost(
         faker.lorem.sentence(),
         faker.lorem.sentence(7),
@@ -18,7 +18,7 @@ export async function createPost(prisma: PrismaService) {
     });
 }
 
-export async function createWrongPost(prisma: PrismaService) {
+async function createWrongPost(prisma: PrismaService) {
     const post = new FactoryPost(
         faker.lorem.sentence(),
         ""
@@ -38,11 +38,11 @@ export async function createWrongPost(prisma: PrismaService) {
     return createdPost;
 }
 
-export async function getPosts(prisma: PrismaService) {
+async function getPosts(prisma: PrismaService) {
     return await prisma.post.findMany();
 }
 
-export async function getPostById(prisma: PrismaService, id: number) {
+async function getPostById(prisma: PrismaService, id: number) {
     return await prisma.post.findFirst({
         where: {
             id
@@ -50,7 +50,7 @@ export async function getPostById(prisma: PrismaService, id: number) {
     });
 }
 
-export async function updatePost(prisma: PrismaService, id: number) {
+async function updatePost(prisma: PrismaService, id: number) {
     const updatedPost = new FactoryPost(
         faker.lorem.sentence(),
         faker.lorem.sentence(5)
@@ -65,3 +65,13 @@ export async function updatePost(prisma: PrismaService, id: number) {
         },
     });
 }
+
+const postsFactory = {
+    createPost,
+    createWrongPost,
+    getPosts,
+    getPostById,
+    updatePost
+}
+
+export default postsFactory;

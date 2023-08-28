@@ -22,7 +22,9 @@ describe('Media e2e Tests', () => {
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(new ValidationPipe());
         prisma = await moduleFixture.resolve(PrismaService);
+        await prisma.publication.deleteMany();
         await prisma.media.deleteMany();
+        await prisma.post.deleteMany();
 
         await app.init();
     });

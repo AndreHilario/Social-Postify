@@ -4,7 +4,7 @@ import { AppModule } from './../src/app.module';
 import { PrismaModule } from "./../src/prisma/prisma.module";
 import { PrismaService } from "./../src/prisma/prisma.service";
 import * as request from "supertest";
-import { createPost, createWrongPost, getPostById, getPosts, updatePost } from "./factories/posts/posts-factory";
+import postsFactory from "./factories/posts/posts-factory";
 
 describe('PostsController', () => {
     let app: INestApplication;
@@ -18,13 +18,15 @@ describe('PostsController', () => {
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(new ValidationPipe());
         prisma = await moduleFixture.resolve(PrismaService);
+        await prisma.publication.deleteMany();
+        await prisma.media.deleteMany();
         await prisma.post.deleteMany();
 
         await app.init();
     });
 
     it('POST /posts => should create a new post and return 201 created', async () => {
-        const post = await createPost(prisma);
+        const post = await postsFactory.createPost(prisma);
 
         const response = await request(app.getHttpServer())
             .post('/posts')
@@ -35,13 +37,13 @@ describe('PostsController', () => {
 
         if (response.body.image) expect(response.body.image).toBe(post.image);
 
-        const createdPost = await getPostById(prisma, post.id);
+        const createdPost = await postsFactory.getPostById(prisma, post.id);
 
         expect(createdPost).not.toBe(null);
     });
 
     it('POST /posts => should return 400 when post body is missing or in wrong format', async () => {
-        const post = await createWrongPost(prisma);
+        const post = await postsFactory.createWrongPost(prisma);
 
         const response = await request(app.getHttpServer())
             .post('/posts')
@@ -49,13 +51,13 @@ describe('PostsController', () => {
         expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
         expect(response.body.message).toContain("All fields are required or use the correct format");
 
-        const createdPost = await getPosts(prisma);
+        const createdPost = await postsFactory.getPosts(prisma);
 
         expect(createdPost).toHaveLength(0);
     });
 
     it('GET /posts => should return 200 and a list of posts', async () => {
-        const createdPost = await createPost(prisma);
+        const createdPost = await postsFactory.createPost(prisma);
 
         const response = await request(app.getHttpServer())
             .get('/posts');
@@ -74,7 +76,7 @@ describe('PostsController', () => {
     });
 
     it('GET /posts/:id => should return 200 and the correct post by id sent', async () => {
-        const createdPost = await createPost(prisma);
+        const createdPost = await postsFactory.createPost(prisma);
 
         const response = await request(app.getHttpServer())
             .get(`/posts/${createdPost.id}`);
@@ -102,8 +104,8 @@ describe('PostsController', () => {
     });
 
     it('PUT /posts/:id => should return 200 and update the correct post by id sent', async () => {
-        const post = await createPost(prisma);
-        const updatedPost = await updatePost(prisma, post.id);
+        const post = await postsFactory.createPost(prisma);
+        const updatedPost = await postsFactory.updatePost(prisma, post.id);
 
         const response = await request(app.getHttpServer())
             .put(`/posts/${post.id}`)
@@ -111,20 +113,20 @@ describe('PostsController', () => {
 
         expect(response.statusCode).toBe(HttpStatus.OK);
 
-        const updatedPostFromDB = await getPostById(prisma, updatedPost.id);
+        const updatedPostFromDB = await postsFactory.getPostById(prisma, updatedPost.id);
         expect(updatedPostFromDB.title).toBe(updatedPost.title);
         expect(updatedPostFromDB.text).toBe(updatedPost.text);
     });
 
     it('DELETE /posts/:id => should return 204 and delete the correct post by id sent', async () => {
-        const post = await createPost(prisma);
+        const post = await postsFactory.createPost(prisma);
 
         const response = await request(app.getHttpServer())
             .delete(`/posts/${post.id}`);
 
         expect(response.statusCode).toBe(HttpStatus.NO_CONTENT);
 
-        const deletedPost = await getPostById(prisma, post.id);
+        const deletedPost = await postsFactory.getPostById(prisma, post.id);
         expect(deletedPost).toBe(null);
     });
 });
